@@ -1,22 +1,26 @@
 # Load Libraries
-library(RcppCNPy)
+library(RcppCNPy) # Numpy library for R
 library(dplyr)
 library(ggplot2)
-library(gridExtra)
-library(grid)
-library(cowplot)
+library(qvalue)
 
 ### Load Files ----
 
-#Load in npy file
-npy_dat<- npyLoad("./PCAngsd/PCAngsd.selection.npy")
+# Load in npy file
+Zscores=npyLoad("./PCAngsd/pcadapt/PCAngsd.pcadapt.zscores.npy")
 
-#Load in .sites file
+#Load in args file
+args=read.csv("./PCAngsd/pcadapt/PCAngsd.args")
+
+#Load in cov file
+cov=read.table("./PCAngsd/pcadapt/PCAngsd.cov")
+
+#Load in sites file
 sites<-read.table("./PCAngsd/snp.sites", header = T, colClasses = c("marker"="factor"))
 names(sites)<-c("scaffold","marker")
 
-#Load in alt 0/1 sites file
-alt_sites=read.table("./PCAngsd/PCAngsd.sites")
+#Load in alt sites file
+alt_sites=read.table("./PCAngsd/pcadapt/PCAngsd.sites")
 
 ###----
 
@@ -32,18 +36,29 @@ qqchi(Zscores)
 
 ###----
 
-#Convert test statistics to p-values
-pval=1-pchisq(npy_dat,1)
-pval=as.data.frame(pval)
+#convert test statistics to p-values (following pcadapt_script.R)
+source("./pcadapt_script_PC.R")
+PCp=read.table("PC.pcadapt.pval.txt")
 
-#Align sites files
+#adjusting p values to q values following Caplins, S. (2021). Marine Genomics 2021. 
+#https://baylab.github.io/MarineGenomics/week-7--fst-and-outlier-analysis.html#finding-outliers-using-pcadapt
+qval <- qvalue(PCp)$qvalues
+outliers <- which(qval<0.1)
+length(outliers)
+
+#Aligning sites files
 sites$V1=alt_sites$V1
 
 #Remove elements of .sites values where V1=0
 sig=sites%>%filter(V1==1)
 
 #Create data frame combining sites and pvals
-Data=data.frame(marker=sig$marker, scaffold=sig$scaffold, pval1=pval$V1)
+Data=data.frame(marker=sig$marker, scaffold=sig$scaffold, q=qval$V1)
+
+#Number of significant hits, and filter non-significant results from data set
+outliers <- which(Data$q<4.89*10^{-9})
+length(outliers)
+Outliers=Data%>%filter(q<4.89*10^{-9})
 
 ### Manhattan Plot ----
 df.tmp <- Data %>% 
@@ -63,8 +78,8 @@ df.tmp <- Data %>%
         arrange(scaffold, marker) %>%
         mutate(BPcum = marker+tot)
 
-ggplot(aes(x=BPcum, y=-log10(pval1), colour=scaffold), data=df.tmp) +
+ggplot(aes(x=BPcum, y=-log10(q), colour=scaffold), data=df.tmp) +
         geom_point() + theme_bw() + geom_hline(yintercept=-log10(4.89*10^(-9))) +
-        xlab("Marker Position") + ylab("-log10(p-value)") +
+        xlab("Marker Position") + ylab("-log10(q-value)") +
         theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size=5)) +
         theme(plot.title = element_text(hjust = 0), legend.position = "none")

@@ -12,10 +12,10 @@
 module load angsd
 
 # calculate FST
-for a in {1..17}; do
-	shift
-	for b in {1..17}; do
-		realSFS -P 16 fst index 01_angsd_sfs/saf_$a.saf.idx 01_angsd_sfs/saf_$b.saf.idx \
-			-sfs 01_angsd_sfs/SFS_$a.$b.sfs -fstout 02_angsd_fst/FST_$a.$b -whichFST 1
-	done
+for a in {1..14}; do
+  shift
+  for b in {1..14}; do
+    realSFS fst index 01_angsd_sfs/saf_$a.saf.idx 01_angsd_sfs/saf_$b.saf.idx \
+      -sfs 02_angsd_sfs/SFS_$a.$b.sfs -fstout 03_angsd_fst/FST_$a.$b -whichFST 1 -P 16 
+  done
 done

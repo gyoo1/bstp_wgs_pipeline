@@ -6,7 +6,7 @@
 #SBATCH --mail-user=20gy11@queensu.ca
 #SBATCH --mem 20G
 #SBATCH -c 8
-#SBATCH --time 8:00:00
+#SBATCH --time 24:00:00
 #SBATCH -o %x-%j.o
 #SBATCH -e %x-%j.e
 
@@ -22,6 +22,6 @@ for SAMPLE in `cat $SAMPLELIST`; do
 
 echo "SLURM_ARRAY_TASK_ID: " $SLURM_ARRAY_TASK_ID
 
-bwa mem -t 8 ../refgenome/LeachesGenome.fasta ../01-adapter_trimming/${SAMPLE}_R1.fastq.gz ../01-adapter_trimming/${SAMPLE}_R2.fastq.gz | samblaster --removeDups | samtools view -h -b -@8 -o ./${SAMPLE}_aligned.bam
+bwa mem -t 8 ../refgenome/LeachsGenome.fasta ../01-adapter_trimming/${SAMPLE}_R1.fastq.gz ../01-adapter_trimming/${SAMPLE}_R2.fastq.gz | samblaster --removeDups | samtools view -h -b -@8 -o ./${SAMPLE}_aligned.bam
 
 done

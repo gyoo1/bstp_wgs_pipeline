@@ -12,9 +12,9 @@
 module load angsd
 
 # calculate 2D SFS for all pairs
-for a in {1..17}; do 
-	shift
-	for b in {1..17}; do 
-		realSFS -P 16 01_angsd_sfs/saf_$a.saf.idx 01_angsd_sfs/saf_$b.saf.idx > 02_angsd_sfs/SFS_$a.$b.sfs
-	done
+for a in {1..14}; do 
+  shift
+  for b in {1..14}; do 
+    realSFS -P 16 01_angsd_sfs/saf_$a.saf.idx 01_angsd_sfs/saf_$b.saf.idx > 02_angsd_sfs/SFS_$a.$b.sfs
+  done
 done
